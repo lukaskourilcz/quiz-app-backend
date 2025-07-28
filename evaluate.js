@@ -1,7 +1,7 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config();
 
@@ -14,7 +14,7 @@ app.use(express.json());
 app.post("/evaluate", async (req, res) => {
   const { question, answer } = req.body;
 
-const prompt = `
+  const prompt = `
 Evaluate the answer to the question below and provide the correct answer.
 
 Question: ${question}
@@ -37,23 +37,46 @@ Example output:
     const result = await model.generateContent(prompt);
     const response = await result.response;
 
+    if (!response) {
+      throw new Error("Gemini did not return any response (response is null).");
+    }
+
     const text = await response.text();
-    const match = text.match(/```json\n([\s\S]*?)\n```|```([\s\S]*?)```|\{[\s\S]*?\}/);
+
+    if (!text || typeof text !== "string") {
+      throw new Error(
+        "Gemini returned no text or it was in an invalid format."
+      );
+    }
+
+    console.log("🔍 Gemini raw response:", text);
+
+    const match = text.match(
+      /```json\n([\s\S]*?)\n```|```([\s\S]*?)```|\{[\s\S]*?\}/
+    );
+
+    if (!match || (!match[1] && !match[2] && !match[0])) {
+      throw new Error(
+        "Gemini response was not in JSON format or it couldn’t be extracted."
+      );
+    }
+
     let jsonString = match[1] || match[2] || match[0];
     jsonString = jsonString.replace(/^`{1,3}(json)?\s*|`{1,3}$/g, "").trim();
 
     const parsed = JSON.parse(jsonString);
     res.json(parsed);
   } catch (err) {
-    console.error("❌ Chyba:", err);
+    console.error("❌ Error:", err);
     res.status(500).json({
       score: 0,
-      feedback: "❌ Chyba při získávání hodnocení z AI. Zkus jinou odpověď nebo kontaktuj admina.",
+      feedback:
+        "❌ Failed to get evaluation from AI. Try a different answer or contact the admin.",
     });
   }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Backend běží na http://localhost:${PORT}`);
+  console.log(`✅ Backend is running at http://localhost:${PORT}`);
 });
