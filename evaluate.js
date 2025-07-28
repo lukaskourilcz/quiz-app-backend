@@ -14,21 +14,21 @@ app.use(express.json());
 app.post("/evaluate", async (req, res) => {
   const { question, answer } = req.body;
 
-  const prompt = `
-Vyhodnoť odpověď studenta k níže uvedené otázce.
+const prompt = `
+Evaluate the answer to the question below and provide the correct answer.
 
-Otázka: ${question}
+Question: ${question}
 
-Odpověď studenta: ${answer}
+Student's answer: ${answer}
 
-Zhodnoť odpověď známkou od 1 do 10 (1 = špatná, 10 = výborná). Napiš zároveň krátkou zpětnou vazbu a přidej stručné vysvětlení správné odpovědi — vše dohromady maximálně 250 znaků.
+Grade the answer on a scale from 1 to 10 (1 = poor, 10 = excellent). Also include the correct answer — everything combined must be no more than 300 characters.
 
-Vrať výsledek **pouze** jako validní JSON objekt, bez jakéhokoli úvodu nebo komentáře.
+Return the result **only** as a valid JSON object, with no introduction or comments.
 
-Příklad výstupu:
+Example output:
 {
   "score": 7,
-  "feedback": "Student vystihl rozdíl mezi var a let, ale vynechal const. Správně: const je blokově scoped a nelze přepsat – u objektů ale lze měnit jejich obsah."
+  "feedback": "Promises are not functions that wait to be called, but objects representing the result (or error) of an async operation. The async/await syntax makes working with Promises easier and looks like synchronous code."
 }
 `;
 
